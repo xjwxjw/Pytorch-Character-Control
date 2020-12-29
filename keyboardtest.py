@@ -32,8 +32,8 @@ class agent():
 
         self.orientation = 0.0
         self.cur_ang_vel = 0.0
-        self.ang_fric_facotr0 = 500.0
-        self.ang_fric_facotr1 = 10.0
+        self.ang_fric_facotr0 = 1000.0
+        self.ang_fric_facotr1 = 1000.0
         self.ang_vel_s0 = 72
         self.ang_vel_s1 = 18
         self.ang_acc_factor = 1000.0
@@ -44,24 +44,11 @@ class agent():
         # self.max_acc_norm = 100.0
 
     def calc_angular_velocity(self, key):
-        tmp_acc = 0.0
-        tmp_fric = 0.0
         if key is None:
-            ## the speed of this character should slow down to 0.
-            ## now there is only friction
-            if self.cur_ang_vel > self.ang_vel_s0:
-                tmp_fric += - self.ang_fric_facotr0
-            elif self.cur_ang_vel > self.ang_vel_s1:
-                tmp_fric += - self.cur_ang_vel * self.ang_fric_facotr1
-            else:
-                tmp_fric += - self.cur_ang_vel / self.delta_time
-            
-            ## pre speed check
-            total_acc = tmp_acc + tmp_fric
-            self.cur_ang_vel += total_acc * self.delta_time
+            ## the angular speed of this character should slow down to 0.
+            self.cur_ang_vel *= 0.1
         else:
             ## now we should calculate the acc from the input
-            tmp_acc = 0
             cur_want_orient = None
             if key == 'w':
                 cur_want_orient = 90.0
@@ -80,8 +67,10 @@ class agent():
                 else:
                     cur_want_orient += 360.0
                     ang_diff = cur_want_orient - self.orientation
-                    
-            self.cur_ang_vel = ang_diff * 10.0
+            if np.abs(ang_diff) < 90.0:
+                self.cur_ang_vel = ang_diff * 10.0
+            else:
+                self.cur_ang_vel = np.sign(ang_diff) * 900.0
 
     def calc_linear_velocity(self, key):
         tmp_acc = np.array([0.0, 0.0])
@@ -161,17 +150,15 @@ def keyboard_control(agent):
                 cur_key = 'd'
             my_agent.calc_linear_velocity(cur_key)
             my_agent.location += my_agent.delta_time * my_agent.cur_vel 
-            # print('before', np.array(my_agent.his_traj)[:,0])
             my_agent.his_traj[:-1] = my_agent.his_traj[1:].copy()
             my_agent.his_traj[-1] = my_agent.location
-            # print('after', np.array(my_agent.his_traj)[:,0])
 
             my_agent.calc_angular_velocity(cur_key)
             my_agent.orientation += my_agent.delta_time * my_agent.cur_ang_vel
             my_agent.orientation %= 360.0
             my_agent.his_ang_traj[:-1] = my_agent.his_ang_traj[1:].copy()
             my_agent.his_ang_traj[-1] = np.array([10.0 * np.cos(my_agent.orientation / 180.0 * np.pi), 10.0 * np.sin(my_agent.orientation / 180.0 * np.pi)])
-            print(my_agent.orientation) 
+            # print(my_agent.orientation, cur_key) 
         except:
             break  # if user pressed a key other than the given key the loop will break
         time.sleep(agent.delta_time)# sleep 30 ms
@@ -185,7 +172,7 @@ if __name__ == "__main__":
     # t2.start()
 
     to_plot = np.array(my_agent.his_traj)
-    to_plot -= to_plot[14:15]
+    # to_plot -= to_plot[14:15]
     plt.ion()
     fig = plt.figure()
     ax = fig.add_subplot(111)

@@ -10,7 +10,7 @@
 
 ## TODO List
 
-- [ ] Visuzalization wit 3D mesh in UE4.
+- [ ] Visualization wit 3D mesh in UE4.
 - [ ] Running pose implementation.
 - [ ] Bug fix in traj pred and 180 turn.
 - [ ] Balance betweend control logic and mocap data (Make it adjustable?).

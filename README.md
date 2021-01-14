@@ -3,7 +3,7 @@
 ## Work plan (预期时间：2周)
 - [x] 熟悉键盘输入map到trajectory的逻辑，并实现Python版本的code
 - [x] 分析现有数据的最大转向速度
-- [x] 对齐控制逻辑的最大转向速度
+- [ ] 对齐控制逻辑的最大转向速度
 - [x] 将现有QuaterNet模型迁移到Avatar数据上
 - [x] 将训好的模型和控制逻辑代码合并
 - [ ] 增加loss constraint，保证逻辑状态与人物状态的一致性

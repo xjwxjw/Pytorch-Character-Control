@@ -17,3 +17,8 @@
 - [ ] Balance betweend control logic and mocap data (Make it adjustable?).
 - [ ] Foot sliding evaluation.
 - [ ] Camera view implementation. 
+
+
+## Work Status
+
+[This sheet](https://docs.google.com/spreadsheets/d/1UhpiTP2QyN1eut8PT26ld14hbsh1qCkTzvO-jR4Dr7I/edit?usp=sharing)

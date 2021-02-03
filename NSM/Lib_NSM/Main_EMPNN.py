@@ -24,7 +24,7 @@ class NSMNN(nn.Module):
                        dim_interaction = 0,\
                        start_gating = 478,\
                        dim_gating = 78):
-        super().__init__()
+        super(NSMNN, self).__init__()
         self.hidden_size_Gating = hidden_size_Gating
         self.hidden_size_Main = hidden_size_Main
         self.keep_prob_components = keep_prob_components
@@ -80,23 +80,33 @@ class NSMNN(nn.Module):
                len(self.activation_encoders)
 
         self.encoder_list = []
-        for i in range(len(self.index_encoders)):
-            encoder_dims = [len(self.index_encoders[i])] + self.dim_encoders[i]
-            print(i, self.dim_encoders[i], encoder_dims)
-            encoder = MLP(1234, encoder_dims, self.activation_encoders[i], 0.7)
-            self.encoder_list.append(encoder)
+        encoder_dims = [len(self.index_encoders[0])] + self.dim_encoders[0]
+        self.encoder0 = MLP(1234, encoder_dims, self.activation_encoders[0], 0.7)
+        encoder_dims = [len(self.index_encoders[1])] + self.dim_encoders[1]
+        self.encoder1 = MLP(1234, encoder_dims, self.activation_encoders[1], 0.7)
+        
+        ## For Gating Network
+        dim_layers = [78, 512, 512, 10]
+        self.gating_NN = ComponentNN(1234, 1, dim_layers, 0.7, 32)
+
+        ## For motion prediction network
+        dim_layers = [640, 512, 512, 578]
+        self.motion_prediction_NN = ComponentNN(1234, 10, dim_layers, 0.7, 32)
 
     def forward(self, input_):
         self.num_encoders = len(self.index_encoders)
         enc_feat_list = []
-        for i in range(self.num_encoders):
-            enc_feat = self.encoder_list[i](input_[:, self.index_encoders[i]])
-            enc_feat_list.append(enc_feat)
-            # print(enc_feat.size())
-        return enc_feat[-1]
+        enc_feat = self.encoder0(input_[:, self.index_encoders[0]])
+        enc_feat_list.append(enc_feat)
+        enc_feat = self.encoder1(input_[:, self.index_encoders[1]])
+        enc_feat_list.append(enc_feat)
+        weight_blend = self.gating_NN(input_[:, self.start_gating:self.start_gating+self.dim_gating], input_.size(0), final_ac = True)
+        weight_blend = weight_blend.permute(1, 0)
+        enc_feat = torch.cat(enc_feat_list, -1)
+        pred = self.motion_prediction_NN(enc_feat, input_.size(0), weight_blend, final_ac = True)
+        return pred
 
 if __name__ == '__main__':
     model = NSMNN()
     x = torch.zeros((32, 556))
     x = model(x)
-    print(x.size())

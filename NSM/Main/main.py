@@ -7,7 +7,7 @@ import torch
 from NSMNN import NSMNN
 from LocoMotionData import LocoMotionData
 from torch.utils.data import DataLoader
-
+import torch.optim as optim
 # Tuning Settings
 hidden_size_Gating = 512
 hidden_size_Main = 512
@@ -38,17 +38,29 @@ def main():
     LocoDataLoader = DataLoader(LocoData, batch_size = batch_size, shuffle = True, num_workers = 4)
 
     ## build model
-    ## input format(pose:0-347, trajectory: 349-399, goal:400-477)
-    model = NSMNN()
-
+    ## input format(pose:0-347, trajectory: 349-399, goal:400-477, gate: 478-555)
+    model = NSMNN().cuda()
+    ## construct optimizer
+    # for item in model.state_dict():
+    #     print(item)
+    optimizer = optim.AdamW(params = model.parameters(), lr = 0.0001, weight_decay=0.0)
     ## start training
     for epoch in range(num_epoch):
+        model.train()
+        loss_list = []
         for idx, (input_, output_) in enumerate(LocoDataLoader):
             # print(epoch, idx, input_.size(), output_.size()) 
-            pass
-                 
-    
-    
+            input_ = input_.cuda()
+            output_ = output_.cuda()
+            pred_ = model(input_)
+            loss = torch.mean(torch.abs(output_ - pred_))
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            loss_list.append(loss.item())
+        print(epoch, np.mean(loss_list))
 
 if __name__ == '__main__':
     main()    

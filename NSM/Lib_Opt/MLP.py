@@ -4,7 +4,7 @@ import torch.nn as nn
 
 class MLP(nn.Module):
     def __init__(self, rng, dim_layers, activation, keep_prob):
-        super().__init__()
+        super(MLP, self).__init__()
         """
         feed forward network that is usually used as encoder/decoder
         :param rng: random seed for initialization
@@ -28,27 +28,24 @@ class MLP(nn.Module):
 
         assert self.num_layer + 1 == len(self.dim_layers)
 
-        self.fc_list = []
-        for i in range(self.num_layer):
-            fc_layer = nn.Linear(in_features = self.dim_layers[i],\
-                                 out_features = self.dim_layers[i+1],\
-                                 bias = True)
-            self.fc_list.append(fc_layer)
+        # for i in range(self.num_layer):
+        self.fc0 = nn.Linear(in_features = self.dim_layers[0],\
+                                out_features = self.dim_layers[1],\
+                                bias = True)
+        self.fc1 = nn.Linear(in_features = self.dim_layers[1],\
+                                out_features = self.dim_layers[2],\
+                                bias = True)
         
-        self.dp_list = []
-        for i in range(self.num_layer):
-            dp_layer = nn.Dropout(1 - self.keep_prob)
-            self.dp_list.append(dp_layer)
+        # for i in range(self.num_layer):
+        self.dp0 = nn.Dropout(1 - self.keep_prob)
+        self.dp1 = nn.Dropout(1 - self.keep_prob)
         
-        self.ac_list = []
-        for i in range(self.num_layer):
-            ac_layer = nn.ELU()
-            self.ac_list.append(ac_layer)
+        # for i in range(self.num_layer):
+        self.ac0 = nn.ELU()
+        self.ac1 = nn.ELU()
         
     def forward(self, input_):
         x = input_
-        for i in range(self.num_layer):
-            x = self.dp_list[i](x)
-            x = self.fc_list[i](x)
-            x = self.ac_list[i](x)
+        x = self.ac0(self.fc0(self.dp0(x)))
+        x = self.ac1(self.fc1(self.dp1(x)))
         return x

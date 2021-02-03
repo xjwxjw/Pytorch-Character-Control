@@ -4,16 +4,17 @@ import torch.nn as nn
 
 class ExpertWeights(nn.Module):
     def __init__(self, rng, shape, name = None):
+        super(ExpertWeights, self).__init__()
         """rng"""
-        self.initialRNG = rng
+        self.initialRNG = np.random.RandomState(1234)
 
         """shape"""
         self.weight_shape = shape  # 4/8 * out * in
         self.bias_shape = (shape[0], shape[1], 1)  # 4/8 * out * 1
 
         """alpha and beta"""
-        self.alpha = torch.Tensor(self.initial_alpha(), dtype=torch.float64).cuda().requires_grad_()
-        self.beta = torch.Tensor(self.initial_beta(), dtype=torch.float64).cuda().requires_grad_()
+        self.alpha = nn.Parameter(torch.Tensor(self.initial_alpha()).requires_grad_())
+        self.beta = nn.Parameter(torch.Tensor(self.initial_beta()).requires_grad_())
 
     """initialize parameters for experts i.e. alpha and beta"""
 
@@ -29,8 +30,8 @@ class ExpertWeights(nn.Module):
     def initial_alpha(self):
         return self.initial_alpha_np()
 
-    def initial_beta_np(self):
-        return self.initial_beta()
+    def initial_beta(self):
+        return torch.zeros(self.bias_shape)
     
     def get_NNweight(self, controlweights, batch_size):
         a = self.alpha.unsqueeze(1) # 4*out*in   -> 4*1*out*in
